@@ -50,15 +50,15 @@ All game logic methods return `list[str]` log messages. They never call `print()
 
 ```
 GameEntity (ABC)
-├── Hero → Warrior (150 HP, 15 ATK, Car, HealthPotion+ManaPotion)
-├── Hero → Mage (80 HP, 30 ATK, Boat, HealthPotion+SpeedBoost)
+├── Hero → Warrior (150 HP, 15 ATK, Car, HealthPotion+SpeedBoost)
+├── Hero → Mage (80 HP, 30 ATK, Boat, HealthPotion+ManaPotion)
 ├── Hero → Archer (100 HP, 20 ATK, Drone, ManaPotion+SpeedBoost)
 └── Boss (600 HP, 30 ATK, Fire Breath every 2nd turn)
 
 UsableItem (ABC)
 ├── HealthPotion (heal 40 HP)
 ├── ManaPotion (recharge vehicle)
-└── SpeedBoost (grant extra action)
+└── SpeedBoost (3x damage next turn + immune to single-target this turn)
 
 Vehicle (ABC, single-use per battle, rechargeable)
 ├── Car (heal 30 HP)
@@ -78,7 +78,7 @@ Vehicle (ABC, single-use per battle, rechargeable)
 | `entities.py` | ~85 | Game entities | `Hero`, `Warrior`, `Mage`, `Archer`, `Boss` |
 | `app.py` | ~190 | Streamlit web UI | Dual-mode (Auto/Manual), 3-column layout, battle log, session state |
 | `main.py` | ~100 | CLI game loop | `play_rpg()`, `choose_action()`, `execute_hero_action()` |
-| `tests/` | ~300 | pytest suite | 42 tests across 4 files |
+| `tests/` | ~400 | pytest suite | 52 tests across 4 files |
 | `requirements.txt` | 2 | Dependencies | streamlit, pytest |
 | `README.md` | — | User documentation | Setup, OOP concepts, game mechanics |
 
@@ -171,9 +171,9 @@ pytest tests/test_battle.py -v   # Just integration tests
 5. Edge case: if ALL alive heroes are speed-boosted, boss wastes its single-target turn
 
 ### Test Coverage
-- **test_items.py** (10 tests): HealthPotion healing/clamping, ManaPotion vehicle recharge, SpeedBoost flag + clearing
-- **test_vehicles.py** (10 tests): Each vehicle's effect, single-use enforcement, recharge
-- **test_entities.py** (20 tests): Hero creation/stats, attack/crit, speed boost 3× damage, boss immunity, items, vehicles, life/death, Boss Fire Breath timing
+- **test_items.py** (8 tests): HealthPotion healing/clamping, ManaPotion vehicle recharge, SpeedBoost flag + clearing
+- **test_vehicles.py** (9 tests): Each vehicle's effect, single-use enforcement, recharge
+- **test_entities.py** (26 tests): Hero creation/stats, attack/crit, speed boost 3× damage, boss immunity, items, vehicles, life/death, Boss Fire Breath timing
 - **test_battle.py** (9 tests): Full battle simulation, Fire Breath timing, items/vehicles in battle, HP clamping, SpeedBoost in battle, boss immunity, Fire Breath vs boost
 
 ---

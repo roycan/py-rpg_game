@@ -57,7 +57,7 @@ python3 main.py
 pytest -v
 ```
 
-This runs the test suite in the `tests/` directory (42 tests covering items, vehicles, entities, and full battle simulation).
+This runs the test suite in the `tests/` directory (52 tests covering items, vehicles, entities, and full battle simulation).
 
 ## Project Files
 
@@ -69,7 +69,7 @@ This runs the test suite in the `tests/` directory (42 tests covering items, veh
 | `entities.py` | Hero subclasses (`Warrior`, `Mage`, `Archer`) and `Boss` |
 | `items.py` | Item classes: `HealthPotion`, `ManaPotion`, `SpeedBoost` |
 | `vehicles.py` | Vehicle classes: `Car`, `Boat`, `Drone` |
-| `tests/` | pytest test suite (42 tests) |
+| `tests/` | pytest test suite (52 tests) |
 | `requirements.txt` | Python dependencies (streamlit, pytest) |
 | `.gitignore` | Ignored local files |
 
@@ -79,21 +79,21 @@ This runs the test suite in the `tests/` directory (42 tests covering items, veh
 
 | Hero | HP | ATK | Vehicle | Vehicle Effect | Inventory |
 |------|-----|-----|---------|----------------|-----------|
-| Warrior | 150 | 15 | Car 🚗 | Heal 30 HP | Health Potion, Mana Potion |
-| Mage | 80 | 30 | Boat ⛵ | Heal 50 HP | Health Potion, Speed Boost |
+| Warrior | 150 | 15 | Car 🚗 | Heal 30 HP | Health Potion, Speed Boost |
+| Mage | 80 | 30 | Boat ⛵ | Heal 50 HP | Health Potion, Mana Potion |
 | Archer | 100 | 20 | Drone 🛩️ | 60 damage to boss | Mana Potion, Speed Boost |
 
 ### Items
 
 - **Health Potion** 🧪 — Restore 40 HP
 - **Mana Potion** 🔮 — Recharge your vehicle ability
-- **Speed Boost** ⚡ — Take an extra action this turn
+- **Speed Boost** ⚡ — 3× damage next turn + immune to boss single-target attack this turn
 
 ### Boss — Smaug the Dragon 🐉
 
-- **HP**: 550
-- **Attack**: 25 damage to a random hero
-- **Fire Breath**: Every 2nd turn, deals 20 damage to **all** heroes
+- **HP**: 600
+- **Attack**: 30 damage to a random hero (skips speed-boosted heroes)
+- **Fire Breath**: Every 2nd turn, deals 20 damage to **all** heroes (ignores speed boost)
 
 ### How to Win
 
