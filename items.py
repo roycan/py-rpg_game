@@ -43,5 +43,5 @@ class SpeedBoost(UsableItem):
         return "Speed Boost"
 
     def use(self, user, target):
-        target._extra_action = True
-        return [f"⚡ {user.name} uses a {self.name} on {target.name} — extra action this turn!"]
+        target._speed_boost_active = True
+        return [f"⚡ {user.name} uses a {self.name} on {target.name} — 3x damage next turn, immune to attack this turn!"]

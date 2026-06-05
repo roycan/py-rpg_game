@@ -42,11 +42,13 @@ class TestManaPotion:
     def test_recharges_vehicle(self):
         archer = Archer("TestArcher")
         # Use the vehicle first
+        assert archer.vehicle is not None
         archer.vehicle._mark_used()
         assert archer.vehicle.is_used is True
 
         potion = ManaPotion()
         logs = potion.use(archer, archer)
+        assert archer.vehicle is not None
         assert archer.vehicle.is_used is False
         assert "recharged" in logs[0].lower()
 
@@ -59,18 +61,20 @@ class TestManaPotion:
 
 
 class TestSpeedBoost:
-    def test_grants_extra_action(self):
+    def test_grants_speed_boost(self):
         mage = Mage("TestMage")
-        assert mage.has_extra_action is False
+        assert mage.is_speed_boosted is False
         boost = SpeedBoost()
         logs = boost.use(mage, mage)
-        assert mage.has_extra_action is True
-        assert "extra" in logs[0].lower()
+        assert mage.is_speed_boosted is True
+        assert "3x damage" in logs[0]
+        assert "immune" in logs[0].lower()
 
-    def test_extra_action_can_be_cleared(self):
-        mage = Mage("TestMage")
+    def test_speed_boost_cleared_after_attack(self):
+        hero = Warrior("Test")
+        boss = Boss("TestBoss", hp=10000)
         boost = SpeedBoost()
-        boost.use(mage, mage)
-        assert mage.has_extra_action is True
-        mage.clear_extra_action()
-        assert mage.has_extra_action is False
+        boost.use(hero, hero)
+        assert hero.is_speed_boosted is True
+        hero.take_turn(boss)  # Attack consumes the speed boost
+        assert hero.is_speed_boosted is False

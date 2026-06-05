@@ -1,27 +1,28 @@
 
+from __future__ import annotations
 import random
+from typing import TYPE_CHECKING
 from base import GameEntity
 from items import HealthPotion, ManaPotion, SpeedBoost
-from vehicles import Car, Boat, Drone
+from vehicles import Car, Boat, Drone, Vehicle
 
 
 # ─── Hero (base class for all heroes) ───
 # Demonstrates: inheritance (GameEntity), composition (has-a Vehicle, has-a inventory)
 
 class Hero(GameEntity):
+    SPEED_BOOST_MULTIPLIER = 3
+
     def __init__(self, name, hp, attack_power):
         super().__init__(name, hp)
         self.attack_power = attack_power
-        self.inventory = []
-        self.vehicle = None
-        self._extra_action = False
+        self.inventory: list = []
+        self.vehicle: Vehicle | None = None
+        self._speed_boost_active = False
 
     @property
-    def has_extra_action(self):
-        return self._extra_action
-
-    def clear_extra_action(self):
-        self._extra_action = False
+    def is_speed_boosted(self):
+        return self._speed_boost_active
 
     def has_items(self):
         return len(self.inventory) > 0
@@ -34,6 +35,13 @@ class Hero(GameEntity):
         logs = []
         is_crit = random.random() < 0.2
         damage = self.attack_power * 2 if is_crit else self.attack_power
+
+        # Speed Boost: triple damage and clear the buff
+        if self._speed_boost_active:
+            damage *= self.SPEED_BOOST_MULTIPLIER
+            self._speed_boost_active = False
+            logs.append(f"⚡ {self.name} attacks with SPEED BOOST power!")
+
         boss.hp -= damage
         if is_crit:
             logs.append(f"💥 CRITICAL HIT!")
@@ -60,14 +68,14 @@ class Hero(GameEntity):
 class Warrior(Hero):
     def __init__(self, name="Warrior"):
         super().__init__(name, hp=150, attack_power=15)
-        self.inventory = [HealthPotion(), ManaPotion()]
+        self.inventory = [HealthPotion(), SpeedBoost()]
         self.vehicle = Car()
 
 
 class Mage(Hero):
     def __init__(self, name="Mage"):
         super().__init__(name, hp=80, attack_power=30)
-        self.inventory = [HealthPotion(), SpeedBoost()]
+        self.inventory = [HealthPotion(), ManaPotion()]
         self.vehicle = Boat()
 
 
@@ -85,7 +93,7 @@ class Boss(GameEntity):
     FIRE_BREATH_INTERVAL = 2  # every 2nd turn
     FIRE_BREATH_DAMAGE = 20
 
-    def __init__(self, name="Dragon", hp=550, attack_power=25):
+    def __init__(self, name="Dragon", hp=600, attack_power=30):
         super().__init__(name, hp)
         self.attack_power = attack_power
         self._turn_count = 0
@@ -116,9 +124,13 @@ class Boss(GameEntity):
                 hero.hp -= self.FIRE_BREATH_DAMAGE
                 logs.append(f"🔥 {hero.name} takes {self.FIRE_BREATH_DAMAGE} fire damage! ({hero.hp}/{hero.max_hp} HP)")
         else:
-            # Normal single-target attack
-            target = random.choice(alive_heroes)
-            target.hp -= self.attack_power
-            logs.append(f"🐉 {self.name} strikes {target.name} for {self.attack_power} damage! ({target.hp}/{target.max_hp} HP)")
+            # Normal single-target attack — skip speed-boosted heroes (they're too fast!)
+            valid_targets = [h for h in alive_heroes if not h.is_speed_boosted]
+            if valid_targets:
+                target = random.choice(valid_targets)
+                target.hp -= self.attack_power
+                logs.append(f"🐉 {self.name} strikes {target.name} for {self.attack_power} damage! ({target.hp}/{target.max_hp} HP)")
+            else:
+                logs.append(f"🐉 {self.name} tries to attack but all heroes are too fast!")
 
         return logs

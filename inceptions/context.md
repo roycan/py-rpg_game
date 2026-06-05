@@ -53,7 +53,7 @@ GameEntity (ABC)
 ├── Hero → Warrior (150 HP, 15 ATK, Car, HealthPotion+ManaPotion)
 ├── Hero → Mage (80 HP, 30 ATK, Boat, HealthPotion+SpeedBoost)
 ├── Hero → Archer (100 HP, 20 ATK, Drone, ManaPotion+SpeedBoost)
-└── Boss (550 HP, 25 ATK, Fire Breath every 2nd turn)
+└── Boss (600 HP, 30 ATK, Fire Breath every 2nd turn)
 
 UsableItem (ABC)
 ├── HealthPotion (heal 40 HP)
@@ -87,23 +87,25 @@ Vehicle (ABC, single-use per battle, rechargeable)
 ## Game Balance
 
 ### Hero Party
-- **Warrior**: 150 HP, 15 ATK, Car (heal 30), HealthPotion + ManaPotion
-- **Mage**: 80 HP, 30 ATK, Boat (heal 50), HealthPotion + SpeedBoost
+- **Warrior**: 150 HP, 15 ATK, Car (heal 30), HealthPotion + SpeedBoost
+- **Mage**: 80 HP, 30 ATK, Boat (heal 50), HealthPotion + ManaPotion
 - **Archer**: 100 HP, 20 ATK, Drone (60 dmg), ManaPotion + SpeedBoost
 - Combined DPR: ~78/round (with 20% crit averaging 1.2×), 20% crit chance for 2x damage
 - Total HP pool: 330 + ~195 healing/dodge resources
 
 ### Boss — Smaug
-- 550 HP, 25 ATK (single target, random hero)
+- 600 HP, 30 ATK (single target, random hero)
 - Fire Breath: every 2nd turn, 20 damage to ALL alive heroes
 - `turns_until_fire` and `fire_breath_next` properties for UI warnings
-- Average boss DPR: ~42/turn (mix of single target + AoE)
+- Average boss DPR: ~50/turn (mix of single target + AoE)
+- Single-target attack **skips speed-boosted heroes** (they're too fast to hit)
 
 ### Expected Balance
 - Heroes win ~75% in Manual mode (smart choices)
 - Heroes win ~50-60% in Auto mode (AI decision tree)
 - Bad item/vehicle usage → likely loss
 - Fire Breath creates "tick-tock" tension every other turn
+- SpeedBoost is a tactical burst item: sacrifice a turn for 3x damage next turn + immunity
 
 ---
 
@@ -143,26 +145,36 @@ Original design had Car = dodge (state flag), Boat = retreat (skip turn). Simpli
 ### Why batch form for Manual mode
 Streamlit reruns the entire script on every widget interaction. Sequential per-hero turns would require complex session state tracking. Batch form (pick all actions, then execute) avoids this entirely.
 
-### Why Boss has 550 HP + Fire Breath every 2 turns
-Original 400 HP boss was too easy (heroes won 100% in auto mode at 50%+ HP). Buffed to 550 HP / 25 ATK / 20 damage Fire Breath every 2nd turn to create real pressure and bring auto win rate to ~50-60%.
+### Why Boss has 600 HP + Fire Breath every 2 turns
+Original 400 HP boss was too easy (heroes won 100% in auto mode at 50%+ HP). Buffed to 600 HP / 30 ATK / 20 damage Fire Breath every 2nd turn to create real pressure and bring auto win rate to ~50-60%. Boss single-target skips speed-boosted heroes (too fast to hit).
+
+### Why SpeedBoost is a delayed burst item
+Original SpeedBoost granted an "extra action" that was consumed immediately — net result was identical to just attacking normally (wasted the item). Redesigned as a tactical trade-off: sacrifice this turn's attack for 3× damage next turn + immunity to boss single-target attack. This creates meaningful decisions (burst when boss is low? use defensively before Fire Breath?).
 
 ---
 
 ## Testing
 
 ```bash
-pytest -v          # Run all 42 tests
+pytest -v          # Run all 52 tests
 pytest tests/test_items.py -v    # Just item tests
 pytest tests/test_vehicles.py -v # Just vehicle tests
 pytest tests/test_entities.py -v # Just entity tests
 pytest tests/test_battle.py -v   # Just integration tests
 ```
 
+### SpeedBoost Mechanic (Design)
+1. **Turn N**: Hero uses SpeedBoost → `_speed_boost_active = True` → immune to boss single-target attack this turn
+2. **Turn N boss phase**: Boss skips speed-boosted heroes for single-target (Fire Breath still hits)
+3. **Turn N+1 hero phase**: Hero attacks with 3× damage → `_speed_boost_active` cleared
+4. Crit + SpeedBoost: `attack_power × 2 × 3 = 6×` (rare but devastating)
+5. Edge case: if ALL alive heroes are speed-boosted, boss wastes its single-target turn
+
 ### Test Coverage
-- **test_items.py** (11 tests): HealthPotion healing/clamping, ManaPotion vehicle recharge, SpeedBoost extra action
+- **test_items.py** (10 tests): HealthPotion healing/clamping, ManaPotion vehicle recharge, SpeedBoost flag + clearing
 - **test_vehicles.py** (10 tests): Each vehicle's effect, single-use enforcement, recharge
-- **test_entities.py** (15 tests): Hero creation/stats, attack/crit, items, vehicles, life/death, Boss Fire Breath timing
-- **test_battle.py** (6 tests): Full battle simulation, Fire Breath timing, items/vehicles in battle, HP clamping
+- **test_entities.py** (20 tests): Hero creation/stats, attack/crit, speed boost 3× damage, boss immunity, items, vehicles, life/death, Boss Fire Breath timing
+- **test_battle.py** (9 tests): Full battle simulation, Fire Breath timing, items/vehicles in battle, HP clamping, SpeedBoost in battle, boss immunity, Fire Breath vs boost
 
 ---
 

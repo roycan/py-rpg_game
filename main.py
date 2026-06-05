@@ -51,19 +51,13 @@ def execute_hero_action(hero, action, boss):
     elif action == "vehicle":
         logs.extend(hero.use_vehicle(boss))
 
-    # Check for extra action from SpeedBoost
-    if hero.has_extra_action:
-        hero.clear_extra_action()
-        logs.append(f"⚡ {hero.name} takes an extra turn!")
-        logs.extend(hero.take_turn(boss))
-
     return logs
 
 
 def play_rpg():
     """Main game loop for the CLI version."""
     players = [Warrior("Thorin"), Mage("Gandalf"), Archer("Legolas")]
-    boss = Boss("Smaug", hp=400)
+    boss = Boss("Smaug", hp=600)
 
     print("=" * 50)
     print(f"🐉 {boss.name} has appeared! (HP: {boss.max_hp})")

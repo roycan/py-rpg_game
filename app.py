@@ -33,7 +33,7 @@ st.title("⚔️ RPG Battle Arena")
 # ─── Initialize game state ───
 if 'game_initialized' not in st.session_state:
     st.session_state.heroes = [Warrior("Thorin"), Mage("Gandalf"), Archer("Legolas")]
-    st.session_state.boss = Boss("Smaug", hp=550)
+    st.session_state.boss = Boss("Smaug", hp=600)
     st.session_state.logs = ["📜 The battle begins! Smaug the Dragon has appeared!"]
     st.session_state.game_initialized = True
     st.session_state.turn_number = 0
@@ -63,9 +63,9 @@ def auto_pick_action(hero):
     if hero.has_vehicle_available() and hp_ratio < 0.6:
         return ("vehicle", None)
 
-    # 3. If has Speed Boost and HP is decent, sometimes use it
+    # 3. If has Speed Boost and boss is alive, use it for burst damage (25% chance)
     for i, item in enumerate(hero.inventory):
-        if item.name == "Speed Boost" and random.random() < 0.10:
+        if item.name == "Speed Boost" and random.random() < 0.25:
             return ("item", i)
 
     # 4. Default: attack
@@ -83,12 +83,6 @@ def execute_hero_action(hero, action, boss):
         logs.extend(hero.use_item(item_index, hero))
     elif action == "vehicle":
         logs.extend(hero.use_vehicle(boss))
-
-    # Check for extra action from SpeedBoost
-    if hero.has_extra_action:
-        hero.clear_extra_action()
-        logs.append(f"⚡ {hero.name} takes an extra turn!")
-        logs.extend(hero.take_turn(boss))
 
     return logs
 

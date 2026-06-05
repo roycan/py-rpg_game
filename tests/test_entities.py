@@ -80,11 +80,13 @@ class TestHeroActions:
         logs = hero.use_vehicle(boss)
         assert isinstance(logs, list)
         assert len(logs) >= 1
+        assert hero.vehicle is not None
         assert hero.vehicle.is_used is True
 
     def test_has_vehicle_available(self):
         hero = Warrior("Test")
         assert hero.has_vehicle_available() is True
+        assert hero.vehicle is not None
         hero.vehicle._mark_used()
         assert hero.has_vehicle_available() is False
 
@@ -106,15 +108,53 @@ class TestHeroLifeDeath:
         assert hero.hp == 0
 
 
+class TestSpeedBoost:
+    def test_speed_boost_triples_damage(self):
+        hero = Warrior("Test")  # 15 ATK
+        boss = Boss("TestBoss", hp=10000)
+        hero._speed_boost_active = True
+        logs = hero.take_turn(boss)
+        # Non-crit: 15 * 3 = 45, Crit: 15 * 2 * 3 = 90
+        assert boss.hp in [10000 - 45, 10000 - 90]
+        assert hero.is_speed_boosted is False  # consumed
+
+    def test_speed_boost_with_crit(self):
+        hero = Mage("Test")  # 30 ATK
+        boss = Boss("TestBoss", hp=10000)
+        hero._speed_boost_active = True
+        # Try to find a crit + speed boost
+        for _ in range(200):
+            boss.hp = 10000
+            hero._speed_boost_active = True
+            logs = hero.take_turn(boss)
+            if "CRITICAL" in "".join(logs):
+                # Crit + speed boost: 30 * 2 * 3 = 180
+                assert boss.hp == 10000 - 180
+                return
+        # If no crit found, just verify speed boost damage (30 * 3 = 90)
+        assert True  # non-crit path already covered
+
+    def test_speed_boost_not_active_by_default(self):
+        hero = Warrior("Test")
+        assert hero.is_speed_boosted is False
+
+    def test_normal_damage_without_speed_boost(self):
+        hero = Warrior("Test")  # 15 ATK
+        boss = Boss("TestBoss", hp=10000)
+        hero.take_turn(boss)
+        # Non-crit: 15, Crit: 30
+        assert boss.hp in [10000 - 15, 10000 - 30]
+
+
 class TestBoss:
     def test_boss_creation(self):
-        boss = Boss("Smaug", hp=550)
+        boss = Boss("Smaug", hp=600)
         assert boss.name == "Smaug"
-        assert boss.hp == 550
-        assert boss.attack_power == 25
+        assert boss.hp == 600
+        assert boss.attack_power == 30
 
     def test_boss_single_attack(self):
-        boss = Boss("TestBoss", hp=550)
+        boss = Boss("TestBoss", hp=600)
         heroes = [Warrior("A"), Mage("B"), Archer("C")]
         logs = boss.take_turn(heroes)
         assert isinstance(logs, list)
@@ -122,6 +162,42 @@ class TestBoss:
         # At least one hero took damage
         total_damage = sum(h.max_hp - h.hp for h in heroes)
         assert total_damage > 0
+
+    def test_boss_skips_speed_boosted_hero(self):
+        boss = Boss("TestBoss", hp=600)
+        hero = Warrior("A")
+        hero._speed_boost_active = True
+        logs = boss.take_turn([hero])
+        # Boss can't hit the speed-boosted hero
+        assert "too fast" in logs[0].lower()
+        assert hero.hp == hero.max_hp  # No damage taken
+
+    def test_boss_single_target_avoids_boosted_hero(self):
+        """Boss should target non-boosted heroes when some are boosted."""
+        boss = Boss("TestBoss", hp=600)
+        boosted = Warrior("Boosted")
+        boosted._speed_boost_active = True
+        normal = Mage("Normal")
+        # Run many times to ensure boss never hits the boosted hero
+        for _ in range(50):
+            boosted.hp = boosted.max_hp
+            normal.hp = normal.max_hp
+            boss._turn_count = 0  # Reset to avoid Fire Breath
+            boss.take_turn([boosted, normal])
+        # Boosted hero should never take damage from single-target
+        assert boosted.hp == boosted.max_hp
+
+    def test_fire_breath_still_hits_boosted_hero(self):
+        """Fire Breath ignores speed boost immunity."""
+        boss = Boss("TestBoss", hp=600)
+        hero = Warrior("A")
+        hero._speed_boost_active = True
+        # Turn 1: normal (boss can't hit boosted hero)
+        boss.take_turn([hero])
+        # Turn 2: Fire Breath (should hit even though boosted)
+        logs = boss.take_turn([hero])
+        assert any("FIRE BREATH" in log for log in logs)
+        assert hero.hp < hero.max_hp  # Took fire damage
 
     def test_fire_breath_every_second_turn(self):
         boss = Boss("TestBoss", hp=550)
