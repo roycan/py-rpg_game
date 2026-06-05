@@ -1,0 +1,61 @@
+flowchart TD
+    START([Turn starts]) --> INC[Increment turn_number]
+    INC --> LOG[Log turn header]
+
+    LOG --> HERO_LOOP{For each alive hero}
+    HERO_LOOP -- Next hero --> CHECK_BOSS{Boss alive?}
+    HERO_LOOP -- Done --> CHECK_BOSS
+
+    CHECK_BOSS -- Yes --> HERO_LOOP
+    CHECK_BOSS -- No --> GAME_OVER_CHECK
+
+    %% Auto mode path
+    HERO_LOOP -- Has hero --> MODE{Play mode?}
+    MODE -- Auto --> AI[auto_pick_action<br/>Decision tree]
+
+    AI --> AI1{HP < 40%?}
+    AI1 -- Yes, has HealthPotion --> ITEM_HEAL[Use Health Potion]
+    AI1 -- No --> AI2{HP < 60%<br/>and vehicle ready?}
+    AI1 -- No potion --> AI2
+    AI2 -- Yes --> VEHICLE[Use vehicle ability]
+    AI2 -- No --> AI3{Has SpeedBoost<br/>and 25% chance?}
+    AI3 -- Yes --> SPEED[Use Speed Boost]
+    AI3 -- No --> ATTACK[Attack boss]
+
+    %% Manual mode path
+    MODE -- Manual --> SELECT[Read action from<br/>form selectbox]
+
+    SELECT --> EXEC{Action type?}
+    ITEM_HEAL --> EXEC
+    VEHICLE --> EXEC
+    SPEED --> EXEC
+    ATTACK --> EXEC
+
+    EXEC -- attack --> DO_ATTACK[hero.take_turn - boss]
+    EXEC -- item_N --> DO_ITEM[hero.use_item - N]
+    EXEC -- vehicle --> DO_VEHICLE[hero.use_vehicle]
+
+    DO_ATTACK --> ADD_LOGS[Add logs to session_state]
+    DO_ITEM --> ADD_LOGS
+    DO_VEHICLE --> ADD_LOGS
+
+    ADD_LOGS --> BOSS_ALIVE{Boss alive?}
+    BOSS_ALIVE -- No --> GAME_OVER_CHECK
+    BOSS_ALIVE -- Yes --> HERO_LOOP
+
+    %% Boss turn
+    HERO_LOOP -- All heroes done --> BOSS_TURN{Boss alive?}
+    BOSS_TURN -- Yes --> BOSS_ACT[boss.take_turn - heroes]
+    BOSS_ACT --> BOSS_LOGS[Add boss logs]
+    BOSS_LOGS --> RERUN[st.rerun]
+    BOSS_TURN -- No --> GAME_OVER_CHECK
+
+    %% Game over check
+    GAME_OVER_CHECK{Game over?}
+    GAME_OVER_CHECK -- Boss dead --> VICTORY[Show Victory message]
+    GAME_OVER_CHECK -- All heroes dead --> DEFEAT[Show Defeat message]
+    GAME_OVER_CHECK -- Still going --> RERUN
+
+    RERUN --> DONE([Page rerenders])
+    VICTORY --> DONE2([Await restart])
+    DEFEAT --> DONE2
