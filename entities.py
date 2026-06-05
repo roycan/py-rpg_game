@@ -82,10 +82,10 @@ class Archer(Hero):
 # Demonstrates: inheritance (GameEntity), internal state tracking (_turn_count)
 
 class Boss(GameEntity):
-    FIRE_BREATH_INTERVAL = 3  # every 3rd turn
-    FIRE_BREATH_DAMAGE = 12
+    FIRE_BREATH_INTERVAL = 2  # every 2nd turn
+    FIRE_BREATH_DAMAGE = 20
 
-    def __init__(self, name="Dragon", hp=400, attack_power=20):
+    def __init__(self, name="Dragon", hp=550, attack_power=25):
         super().__init__(name, hp)
         self.attack_power = attack_power
         self._turn_count = 0

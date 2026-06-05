@@ -43,12 +43,12 @@ class TestFullBattle:
         assert not (boss_dead and heroes_dead)  # Can't both be dead... usually
 
     def test_fire_breath_timing_in_battle(self):
-        """Fire Breath should fire on turns 3, 6, 9..."""
+        """Fire Breath should fire on turns 2, 4, 6, 8..."""
         boss = Boss("Boss", hp=10000)
         heroes = [Warrior("A"), Mage("B")]
         fire_breath_turns = []
 
-        for turn in range(1, 10):
+        for turn in range(1, 9):
             for hero in heroes:
                 if hero.is_alive():
                     hero.take_turn(boss)
@@ -56,7 +56,7 @@ class TestFullBattle:
             if any("FIRE BREATH" in log for log in logs):
                 fire_breath_turns.append(turn)
 
-        assert fire_breath_turns == [3, 6, 9]
+        assert fire_breath_turns == [2, 4, 6, 8]
 
     def test_heroes_can_use_items_in_battle(self):
         """Heroes should be able to use items during battle."""

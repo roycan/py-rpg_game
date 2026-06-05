@@ -1,26 +1,10 @@
 # RPG Battle Arena
 
 A turn-based RPG battle simulator built in Python 3 to demonstrate **Object-Oriented Programming (OOP)** concepts in a fun, interactive way. Includes both a **Streamlit web UI** and a **command-line** version.
-A turn-based RPG battle simulator built in Python 3 to demonstrate **Object-Oriented Programming (OOP)** concepts in a fun, interactive way. Includes both a **Streamlit web UI** and a **command-line** version.
 
 ## Overview
 
-A party of three heroes (Warrior, Mage, Archer) battles a dragon boss in turn-based combat. Each hero has unique stats, inventory items, and a vehicle with a special ability. The boss has a devastating Fire Breath attack that hits all heroes every 3rd turn.
-
-Choose between **Auto Battle** (AI picks actions) or **Manual Battle** (you choose each hero's action).
-
-## OOP Concepts Demonstrated
-
-| Concept | Where to Find It |
-|---------|-----------------|
-| **Inheritance** | `Hero` → `Warrior`, `Mage`, `Archer`; `Vehicle` → `Car`, `Boat`, `Drone` |
-| **Abstract Base Classes** | `GameEntity`, `UsableItem`, `Vehicle` in `base.py` |
-| **Properties & Setters** | `hp` property with clamping (can't go below 0 or above max) |
-| **Composition** | Hero *has-a* Vehicle, Hero *has-a* inventory of Items |
-| **Polymorphism** | Different `.use()` for each item and vehicle type |
-| **Encapsulation** | `_used` flag on vehicles, `_hp` with getter/setter |
-| **Separation of Concerns** | Game logic returns `list[str]`, UI decides how to display |
-A party of three heroes (Warrior, Mage, Archer) battles a dragon boss in turn-based combat. Each hero has unique stats, inventory items, and a vehicle with a special ability. The boss has a devastating Fire Breath attack that hits all heroes every 3rd turn.
+A party of three heroes (Warrior, Mage, Archer) battles a dragon boss in turn-based combat. Each hero has unique stats, inventory items, and a vehicle with a special ability. The boss has a devastating Fire Breath attack that hits all heroes every 2nd turn.
 
 Choose between **Auto Battle** (AI picks actions) or **Manual Battle** (you choose each hero's action).
 
@@ -39,9 +23,7 @@ Choose between **Auto Battle** (AI picks actions) or **Manual Battle** (you choo
 ## Requirements
 
 - Python 3.10+
-- Python 3.10+
 - Streamlit
-- pytest (for running tests)
 - pytest (for running tests)
 
 ## Install
@@ -53,9 +35,6 @@ python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## Run
-
-### Streamlit Web UI
 ## Run
 
 ### Streamlit Web UI
@@ -112,9 +91,9 @@ This runs the test suite in the `tests/` directory (42 tests covering items, veh
 
 ### Boss — Smaug the Dragon 🐉
 
-- **HP**: 400
-- **Attack**: 20 damage to a random hero
-- **Fire Breath**: Every 3rd turn, deals 12 damage to **all** heroes
+- **HP**: 550
+- **Attack**: 25 damage to a random hero
+- **Fire Breath**: Every 2nd turn, deals 20 damage to **all** heroes
 
 ### How to Win
 

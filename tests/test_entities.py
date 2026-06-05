@@ -40,12 +40,12 @@ class TestHeroCreation:
 class TestHeroActions:
     def test_attack_returns_logs(self):
         hero = Warrior("Test")
-        boss = Boss("TestBoss", hp=400)
+        boss = Boss("TestBoss", hp=550)
         logs = hero.take_turn(boss)
         assert isinstance(logs, list)
         assert len(logs) >= 1
         assert "Test" in logs[-1]
-        assert boss.hp < 400  # Boss took damage
+        assert boss.hp < 550  # Boss took damage
 
     def test_critical_hit_does_double_damage(self):
         hero = Warrior("Test")
@@ -76,7 +76,7 @@ class TestHeroActions:
 
     def test_use_vehicle(self):
         hero = Archer("Test")
-        boss = Boss("TestBoss", hp=400)
+        boss = Boss("TestBoss", hp=550)
         logs = hero.use_vehicle(boss)
         assert isinstance(logs, list)
         assert len(logs) >= 1
@@ -108,13 +108,13 @@ class TestHeroLifeDeath:
 
 class TestBoss:
     def test_boss_creation(self):
-        boss = Boss("Smaug", hp=400)
+        boss = Boss("Smaug", hp=550)
         assert boss.name == "Smaug"
-        assert boss.hp == 400
-        assert boss.attack_power == 20
+        assert boss.hp == 550
+        assert boss.attack_power == 25
 
     def test_boss_single_attack(self):
-        boss = Boss("TestBoss", hp=400)
+        boss = Boss("TestBoss", hp=550)
         heroes = [Warrior("A"), Mage("B"), Archer("C")]
         logs = boss.take_turn(heroes)
         assert isinstance(logs, list)
@@ -123,53 +123,57 @@ class TestBoss:
         total_damage = sum(h.max_hp - h.hp for h in heroes)
         assert total_damage > 0
 
-    def test_fire_breath_every_third_turn(self):
-        boss = Boss("TestBoss", hp=400)
+    def test_fire_breath_every_second_turn(self):
+        boss = Boss("TestBoss", hp=550)
         heroes = [Warrior("A"), Mage("B"), Archer("C")]
 
         # Turn 1: normal
         logs1 = boss.take_turn(heroes)
         assert not any("FIRE BREATH" in log for log in logs1)
 
-        # Turn 2: normal
+        # Turn 2: Fire Breath!
         logs2 = boss.take_turn(heroes)
-        assert not any("FIRE BREATH" in log for log in logs2)
+        assert any("FIRE BREATH" in log for log in logs2)
 
-        # Turn 3: Fire Breath!
+        # Turn 3: normal
         logs3 = boss.take_turn(heroes)
-        assert any("FIRE BREATH" in log for log in logs3)
+        assert not any("FIRE BREATH" in log for log in logs3)
+
+        # Turn 4: Fire Breath!
+        logs4 = boss.take_turn(heroes)
+        assert any("FIRE BREATH" in log for log in logs4)
 
     def test_fire_breath_hits_all_alive(self):
-        boss = Boss("TestBoss", hp=400)
+        boss = Boss("TestBoss", hp=550)
         heroes = [Warrior("A"), Mage("B")]
 
-        # Do 2 normal turns
-        boss.take_turn(heroes)
+        # Do 1 normal turn
         boss.take_turn(heroes)
 
         # Reset HP to known values
         heroes[0].hp = 150
         heroes[1].hp = 80
 
-        # Turn 3: Fire Breath
+        # Turn 2: Fire Breath
         logs = boss.take_turn(heroes)
-        assert heroes[0].hp == 150 - 12  # 138
-        assert heroes[1].hp == 80 - 12   # 68
+        assert heroes[0].hp == 150 - 20  # 130
+        assert heroes[1].hp == 80 - 20   # 60
 
     def test_fire_breath_timing_property(self):
-        boss = Boss("TestBoss", hp=400)
-        assert boss.turns_until_fire == 3
+        boss = Boss("TestBoss", hp=550)
+        assert boss.turns_until_fire == 2
         assert boss.fire_breath_next is False
 
         boss.take_turn([Warrior("A")])  # Turn 1
-        assert boss.turns_until_fire == 2
-
-        boss.take_turn([Warrior("A")])  # Turn 2
         assert boss.turns_until_fire == 1
         assert boss.fire_breath_next is True
 
+        boss.take_turn([Warrior("A")])  # Turn 2 (Fire Breath)
+        assert boss.turns_until_fire == 2
+        assert boss.fire_breath_next is False
+
     def test_boss_skips_dead_heroes(self):
-        boss = Boss("TestBoss", hp=400)
+        boss = Boss("TestBoss", hp=550)
         heroes = [Warrior("A")]
         heroes[0].hp = 0  # Dead
         logs = boss.take_turn(heroes)

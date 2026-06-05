@@ -53,7 +53,7 @@ GameEntity (ABC)
 ├── Hero → Warrior (150 HP, 15 ATK, Car, HealthPotion+ManaPotion)
 ├── Hero → Mage (80 HP, 30 ATK, Boat, HealthPotion+SpeedBoost)
 ├── Hero → Archer (100 HP, 20 ATK, Drone, ManaPotion+SpeedBoost)
-└── Boss (400 HP, 20 ATK, Fire Breath every 3rd turn)
+└── Boss (550 HP, 25 ATK, Fire Breath every 2nd turn)
 
 UsableItem (ABC)
 ├── HealthPotion (heal 40 HP)
@@ -76,7 +76,7 @@ Vehicle (ABC, single-use per battle, rechargeable)
 | `items.py` | ~48 | Consumable items | `HealthPotion`, `ManaPotion`, `SpeedBoost` |
 | `vehicles.py` | ~35 | Vehicle abilities | `Car`, `Boat`, `Drone` |
 | `entities.py` | ~85 | Game entities | `Hero`, `Warrior`, `Mage`, `Archer`, `Boss` |
-| `app.py` | ~170 | Streamlit web UI | Dual-mode (Auto/Manual), battle log, session state |
+| `app.py` | ~190 | Streamlit web UI | Dual-mode (Auto/Manual), 3-column layout, battle log, session state |
 | `main.py` | ~100 | CLI game loop | `play_rpg()`, `choose_action()`, `execute_hero_action()` |
 | `tests/` | ~300 | pytest suite | 42 tests across 4 files |
 | `requirements.txt` | 2 | Dependencies | streamlit, pytest |
@@ -90,19 +90,20 @@ Vehicle (ABC, single-use per battle, rechargeable)
 - **Warrior**: 150 HP, 15 ATK, Car (heal 30), HealthPotion + ManaPotion
 - **Mage**: 80 HP, 30 ATK, Boat (heal 50), HealthPotion + SpeedBoost
 - **Archer**: 100 HP, 20 ATK, Drone (60 dmg), ManaPotion + SpeedBoost
-- Combined DPR: ~65/round, 20% crit chance for 2x damage
+- Combined DPR: ~78/round (with 20% crit averaging 1.2×), 20% crit chance for 2x damage
 - Total HP pool: 330 + ~195 healing/dodge resources
 
 ### Boss — Smaug
-- 400 HP, 20 ATK (single target, random hero)
-- Fire Breath: every 3rd turn, 12 damage to ALL alive heroes
+- 550 HP, 25 ATK (single target, random hero)
+- Fire Breath: every 2nd turn, 20 damage to ALL alive heroes
 - `turns_until_fire` and `fire_breath_next` properties for UI warnings
+- Average boss DPR: ~42/turn (mix of single target + AoE)
 
 ### Expected Balance
-- Heroes win ~80% in Manual mode (smart choices)
+- Heroes win ~75% in Manual mode (smart choices)
 - Heroes win ~50-60% in Auto mode (AI decision tree)
 - Bad item/vehicle usage → likely loss
-- Fire Breath creates "tick-tock" tension pattern
+- Fire Breath creates "tick-tock" tension every other turn
 
 ---
 
@@ -120,12 +121,14 @@ Vehicle (ABC, single-use per battle, rechargeable)
 1. **Auto Battle** (`🤖 Auto Battle`): Single "Next Turn" button, AI uses decision tree (heal if low → use vehicle if hurt → attack)
 2. **Manual Battle** (`🎮 Manual Battle`): `st.form` with `st.selectbox` per alive hero, batch "Execute Turn" button
 
-### UI Layout
-- Radio toggle at top
-- Two columns: Heroes (left) | Boss (right)
-- Heroes show HP bar, inventory items, vehicle name + status
-- Boss shows HP bar, Fire Breath countdown/warning
-- Battle log as `st.text_area` below divider (newest at top)
+### UI Layout (3-column, fits standard viewport)
+- Uses `layout="wide"` in `set_page_config` for maximum horizontal space
+- Radio toggle at top for play mode selection
+- Three columns (`[1, 1, 2]` ratio): Heroes (left) | Boss + Actions (center) | Battle Log (right)
+- Heroes show compact 2-line cards: name/class + text-based HP bar on line 1, items + vehicle on line 2
+- Boss shows HP bar, Fire Breath countdown/warning, action button/form
+- Battle log as `st.text_area` in right column (newest at top, height=450)
+- No scrolling needed on 1366×768 viewport
 
 ---
 
@@ -140,8 +143,8 @@ Original design had Car = dodge (state flag), Boat = retreat (skip turn). Simpli
 ### Why batch form for Manual mode
 Streamlit reruns the entire script on every widget interaction. Sequential per-hero turns would require complex session state tracking. Batch form (pick all actions, then execute) avoids this entirely.
 
-### Why Boss has 400 HP + Fire Breath
-Original 300 HP boss was too easy (heroes killed it in ~5 rounds). With items/vehicles, heroes are even stronger. 400 HP + AoE creates pressure to use healing strategically.
+### Why Boss has 550 HP + Fire Breath every 2 turns
+Original 400 HP boss was too easy (heroes won 100% in auto mode at 50%+ HP). Buffed to 550 HP / 25 ATK / 20 damage Fire Breath every 2nd turn to create real pressure and bring auto win rate to ~50-60%.
 
 ---
 
