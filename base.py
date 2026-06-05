@@ -25,6 +25,35 @@ class GameEntity(ABC):
 
     def is_alive(self): return self._hp > 0
 
+
+######
+# UsableItem — abstract base for all consumable items
+# Demonstrates: Abstract Base Class, polymorphism (different items, same .use() interface)
+
 class UsableItem(ABC):
     @abstractmethod
-    def use(self, user, target): pass
+    def use(self, user, target) -> list[str]: pass
+
+
+##########
+# Vehicle — abstract base for all vehicles
+# Demonstrates: Abstract Base Class, composition (Hero *has-a* Vehicle)
+
+class Vehicle(ABC):
+    def __init__(self):
+        self._used = False
+
+    @property
+    def is_used(self): return self._used
+
+    @abstractmethod
+    def use(self, user, target) -> list[str]:
+        """Use the vehicle ability. Returns log messages."""
+        pass
+
+    def _mark_used(self):
+        self._used = True
+
+    def recharge(self):
+        """Recharge the vehicle so it can be used again."""
+        self._used = False
